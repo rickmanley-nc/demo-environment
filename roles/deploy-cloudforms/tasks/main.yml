@@ -1,0 +1,24 @@
+---
+- name: Copy Gold Image to /home/rnelson/Images/
+  command: cp -r /home/rnelson/Images/original/cfme-rhevm-5.8.1.5-1.x86_64.qcow2 /home/rnelson/Images/DEMO-CloudForms.qcow2
+  tags: cloudforms
+
+- name: Provision Gold Image as DEMO-CloudForms
+  command: virt-install --name DEMO-CloudForms --ram 4096 --vcpus 2 --network bridge=virbr3 --import --disk path=/home/rnelson/Images/DEMO-CloudForms.qcow2 --disk path=/home/rnelson/Images/DEMO-CloudForms-Database.qcow2,size=25,bus=virtio,format=qcow2 --noautoconsole
+  tags: cloudforms
+
+- name: Wait for SSH to come up on CloudForms
+  local_action:
+    module: wait_for
+      host={{ cloudforms_hostname }}
+      port=22
+      delay=1
+      timeout=300
+  tags: cloudforms
+
+
+# need to create install-cloudforms role
+# need to edit gold image to change hostname and set static IP address
+#- name: Execute importdb.sh script (need to be on VPN)
+#  script: importdb.sh
+#  tags: cloudform

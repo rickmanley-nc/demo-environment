@@ -1,0 +1,8 @@
+---
+- hosts: all
+  name: Install and Configure Environment
+  roles:
+    - install-satellite
+    - install-tower
+    - install-idm
+#    - install-cloudforms

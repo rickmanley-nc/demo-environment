@@ -1,0 +1,8 @@
+---
+- hosts: all
+  name: Clone VM from Template
+  roles:
+    - deploy-satellite
+    - deploy-tower
+    - deploy-idm
+    - deploy-cloudforms

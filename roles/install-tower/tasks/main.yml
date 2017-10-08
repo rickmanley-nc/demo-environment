@@ -1,0 +1,90 @@
+---
+- name: Download /etc/hosts file from Laptop
+  get_url:
+    url: http://192.168.126.1/hosts
+    dest: /etc/hosts
+    mode: 0644
+    backup: yes
+    force: yes
+  tags: tower
+
+- name: Register to RHN and attach RHEL Server SKU, (change to pool_ids when Ansible 2.4 is released)
+  redhat_subscription:
+    state: present
+    username: "{{ rhn_username }}"
+    password: "{{ rhn_password }}"
+# need ansible2.4 for pool_ids to work
+    pool: '^(Employee SKU)$'
+  tags: tower
+
+- name: Disable All Repositories
+  command: subscription-manager repos --disable "*"
+  tags: tower
+
+- name: Enable Server, Extras, and Optional Repositories
+  command: subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-extras-rpms --enable rhel-7-server-optional-rpms
+  tags: tower
+
+- name: Enable EPEL Repository
+  yum:
+    name: http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+  tags: tower
+
+- name: Install 'ansible' and 'ipa-client' RPMs
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ansible
+    - ipa-client
+  tags: tower
+
+
+- name: Download and Unarchive Ansible Tower Bundle Installer
+  unarchive:
+    src: https://releases.ansible.com/ansible-tower/setup-bundle/ansible-tower-setup-bundle-latest.el7.tar.gz
+    dest: /root/
+    remote_src: yes
+  tags: tower
+
+- name: Download inventory file from Laptop
+  get_url:
+    url: http://192.168.126.1/inventory
+    dest: /root/ansible-tower-setup-bundle-3.1.4-1.el7/
+# can we make the dest folder not hardcoded?
+    mode: 0644
+  tags: tower
+
+#- name: execute setup.sh script
+# how to execute setup.sh script that's bundled in tar.gz file? When we untar the bundle, the directory is based on the version of Tower like this:
+# cd ansible-tower-setup-bundle-3.1.4-1.el7/
+#  tags: tower
+
+# restore from backup
+# ./setup -b creates tower-backup-2017-08-28-02:16:06.tar.gz
+# host this backup on Laptop, and run the restore like so:
+# ./setup -e 'restore_backup_file=/root/tower-backup-2017.tar.gz'
+
+
+#- Add epel
+#- yum install ansible
+#- download bundled tower installer
+#- get license
+#- run bundled installer
+#- using tower cli or tower ansible modules:
+#	- import license
+#	- create 1 org
+#	- create 2 teams
+#	- create users
+#	- create credentials
+#		- laptop
+#		- demo_env
+#	- create project
+#		- link github
+#	- setup inventory
+#		-groups: laptop, satellite
+#	- setup templates
+#		- config satellite
+#		- deploy satellite
+#		- deploy and config workflow

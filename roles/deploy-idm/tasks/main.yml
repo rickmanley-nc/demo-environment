@@ -1,0 +1,35 @@
+---
+- name: Copy Gold Image to /home/rnelson/Images/
+  command: cp -r /home/rnelson/Images/original/GOLD-IdM.qcow2 /home/rnelson/Images/DEMO-IdM.qcow2
+  tags: idm
+
+- name: Provision Gold Image as DEMO-IdM
+  command: virt-install --name DEMO-IdM --ram 1024 --vcpus 1 --network bridge=virbr3 --disk path=/home/rnelson/Images/DEMO-IdM.qcow2 --import --noautoconsole
+  tags: idm
+
+- name: Wait for SSH to come up on IdM
+  local_action:
+    module: wait_for
+      host={{ idm_hostname }}
+      port=22
+      delay=1
+      timeout=300
+  tags: idm
+
+# 1. Create sat-isolated network with x.x.126.0/24
+# 2. Create VM: 1 vCPU, 1024 MiB RAM, 10 GB Storage, RHEL 7.3 - place on sat-isolated network with the following static ip info:
+# Configure static networking as
+# IP -  192.168.126.4
+# Netmask - 255.255.255.0
+# Gateway - 192.168.126.1
+# DNS - 192.168.126.1 (we might need to change this to itself after installing)
+# 3. Ensure partition layout has just "/" at 9 GiB, "swap" at 1024 MiB, and "/boot" at 200 MiB
+# 4. Clone vm as gold image.
+
+# virsh suspend DEMO-IdM
+# virt-clone --connect qemu:///system --original DEMO-IdM --name GOLD-IdM --file /home/rnelson/Images/GOLD-IdM.qcow2
+# virsh resume DEMO-IdM
+# virt-sysprep -d GOLD-IdM --hostname idm.rnelson-demo.com --root-password password:redhat
+# mv /home/rnelson/Images/GOLD-IdM.qcow2 /home/rnelson/Images/original/
+# cp /home/rnelson/Images/original/GOLD-IdM.qcow2 /home/rnelson/Images/DEMO-IdM.qcow2
+# virt-install --name DEMO-IdM --ram 1024 --vcpus 1 --network bridge=virbr3 --disk path=/home/rnelson/Images/DEMO-IdM.qcow2 --import --noautoconsole

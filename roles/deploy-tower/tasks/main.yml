@@ -1,0 +1,26 @@
+---
+- name: Copy Gold Image to /home/rnelson/Images/ (tower.demo.com pass/redhat)
+  command: cp -r /home/rnelson/Images/original/GOLD-tower.qcow2 /home/rnelson/Images/DEMO-Tower.qcow2
+  tags: tower
+
+- name: Provision Gold Image as DEMO-Tower
+  command: virt-install --name DEMO-Tower --ram 4096 --vcpus 1 --network bridge=virbr3 --disk path=/home/rnelson/Images/DEMO-Tower.qcow2 --import --noautoconsole
+  tags: tower
+
+# 1. Create VM: 1 vCPU, 4096 GB RAM, 40 GB Storage, RHEL 7.3 - place on sat-isolated network with the following static ip info:
+# Configure static networking as
+# IP -  192.168.126.3
+# Netmask - 255.255.255.0
+# Gateway - 192.168.126.1
+# DNS - 192.168.126.1 (note: this is temporary. After we install Satellite, we'll change this to the IP of the Satellite as it will be running DNS)
+# 3. Ensure partition layout has just "/" at 37.5 GiB, "swap" at 2048 MiB, and "/boot" at 200 MiB
+# 4. Clone disk/image/vm as gold image.
+# 5. build new image...
+
+# virsh suspend DEMO-Tower
+# virt-clone --connect qemu:///system --original DEMO-Tower --name GOLD-tower --file /home/rnelson/Images/GOLD-tower.qcow2
+# virsh resume DEMO-Tower
+# virt-sysprep -d GOLD-tower --hostname tower.demo.com --root-password password:redhat
+# mv /home/rnelson/Images/GOLD-tower.qcow2 /home/rnelson/Images/original/
+# cp /home/rnelson/Images/original/GOLD-tower.qcow2 /home/rnelson/Images/DEMO-Tower.qcow2
+# virt-install --name DEMO-Tower --ram 4096 --vcpus 1 --network bridge=virbr3 --disk path=/home/rnelson/Images/DEMO-Tower.qcow2 --import --noautoconsole

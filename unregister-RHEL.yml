@@ -1,0 +1,8 @@
+---
+- name: Unregister VM from Customer Portal
+  hosts: '{{ survey_unreg_hostname }}'
+
+  tasks:
+    - name: Unregister VM from Customer Portal
+      command: subscription-manager unregister
+      ignore_errors: yes

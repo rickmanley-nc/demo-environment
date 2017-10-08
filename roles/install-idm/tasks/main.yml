@@ -1,0 +1,57 @@
+---
+- name: Set hostname
+  command: hostnamectl set-hostname {{ idm_hostname }}
+  tags: idm
+
+- name: Start and Enable firewalld
+  systemd: name=firewalld state=started enabled=yes
+  tags: idm
+
+- name: Configure firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: yes
+    state: enabled
+  with_items: "{{ idm_ports }}"
+  tags: idm
+
+- name: Download /etc/hosts file from Laptop (need to force this)
+  get_url:
+    url: http://192.168.126.1/hosts
+    dest: /etc/hosts
+    mode: 0644
+    backup: yes
+    force: yes
+  tags: idm
+
+- name: Register to RHN and attach general Server SKU through Activation Key
+  redhat_subscription:
+    state: present
+    activationkey: "{{ server_activation_key }}"
+    org_id: "{{ rhn_org_id }}"
+  tags: idm
+
+- name: Disable All Repositories
+  raw: subscription-manager repos --disable "*"
+  tags: idm
+
+- name: Enable RHEL Server Repository
+  command: /usr/sbin/subscription-manager repos --enable=rhel-7-server-rpms
+  tags: idm
+
+- name: Install IdM RPMs
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ipa-server
+    - ipa-server-dns
+  tags: idm
+
+- name: Configure IdM
+  command: ipa-server-install -U --hostname={{ idm_hostname }} --domain={{ idm_domain }} --realm={{ idm_realm }} --ds-password={{ idm_dir_admin_password}} --admin-password={{ idm_admin_password }} --setup-dns --forwarder '{{ idm_forward_ip }}' --mkhomedir
+  tags: idm
+
+#--no-ntp ?
+#creates=/etc/ipa/default.conf ?
