@@ -28,6 +28,7 @@
 ## Remaining Items to Complete
 
 - Fix Tower deploy and install
+- Dropbox for hosting large files like ISOs?
 - Use tower CLI to create projects, inventories, etc
 - update readme for general steps of Tower setup
 - update readme for roles
